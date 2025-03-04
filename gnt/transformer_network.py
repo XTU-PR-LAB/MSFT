@@ -1,9 +1,6 @@
 import numpy as np
 import torch
 import torch.nn as nn
-import torch.utils.checkpoint as checkpoint
-from torch.cuda.amp import autocast
-device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
 # sin-cose embedding module
 class Embedder(nn.Module):
@@ -89,7 +86,6 @@ class Attention2D(nn.Module):
 
         x = ((v + pos) * attn).sum(dim=2)
         x = self.dp(self.out_fc(x))
-        del q,k,v,pos
         torch.cuda.empty_cache()
         return x
 
@@ -112,16 +108,13 @@ class Transformer2D(nn.Module):
         residue = q
         with autocast():
             x = self.attn_norm(q)
-        #x = checkpoint.checkpoint(self.attn, x, k, pos, mask)
         x = self.attn(x, k, pos, mask)
-        del q,k,pos
         x = x + residue
 
         residue = x
         x = self.ff_norm(x)
         x = self.ff(x)
         x = x + residue
-        del residue
 
         return x
 
@@ -176,7 +169,6 @@ class Attention(nn.Module):
         out = torch.matmul(attn, v).permute(0, 2, 1, 3).contiguous()
         out = out.view(x.shape[0], x.shape[1], -1)
         out = self.dp(self.out_fc(out))
-        del q,k,v,pos
         if ret_attn:
             return out, attn
         else:
@@ -204,7 +196,6 @@ class Transformer(nn.Module):
         residue = x
         x = self.attn_norm(x)#
         x = self.attn(x, pos, ret_attn)
-        #x = checkpoint.checkpoint(self.attn, x, pos, ret_attn)
         
         if ret_attn:
             x, attn = x
@@ -331,7 +322,6 @@ class DeformConv2d(nn.Module):
         # (1, 2N, h, w)
         p_0 = self._get_p_0(h, w, N, dtype)
         p = p_0 + p_n + offset
-        del p_0, p_n, offset
         return p
     
     def _get_p_0(self, h, w, N, dtype): #卷积核的中心坐标
@@ -343,7 +333,6 @@ class DeformConv2d(nn.Module):
         p_0_x = torch.flatten(p_0_x).view(1, 1, h, w).repeat(1, N, 1, 1)
         p_0_y = torch.flatten(p_0_y).view(1, 1, h, w).repeat(1, N, 1, 1)
         p_0 = torch.cat([p_0_x, p_0_y], 1).type(dtype)
-        del p_0_x, p_0_y
 
         return p_0
 
@@ -357,7 +346,6 @@ class DeformConv2d(nn.Module):
         # (2N, 1)
         p_n = torch.cat([torch.flatten(p_n_x), torch.flatten(p_n_y)], 0)
         p_n = p_n.view(1, 2*N, 1, 1).type(dtype)
-        del p_n_x, p_n_y
 
         return p_n
     
@@ -376,7 +364,6 @@ class DeformConv2d(nn.Module):
             index = index.contiguous().unsqueeze(dim=1).expand(-1, c, -1, -1, -1).contiguous().view(b, c, -1)
 
             x_offset = x.gather(dim=-1, index=index).contiguous().view(b, c, h, w, N)
-        del x, q, index
 
         return x_offset
 
@@ -432,7 +419,6 @@ class DeformConv2d(nn.Module):
         x_q_rb = self._get_x_q(x, q_rb, N) # 右下角的点在原始图片中对应的真实像素值
         x_q_lb = self._get_x_q(x, q_lb, N) # 左下角的点在原始图片中对应的真实像素值
         x_q_rt = self._get_x_q(x, q_rt, N) # 右上角的点在原始图片中对应的真实像素值
-        del q_lt,q_lb,q_rb,q_rt
 
         # (b, c, h, w, N)##
         x_offset = g_lt.unsqueeze(dim=1) * x_q_lt + \
@@ -450,8 +436,6 @@ class DeformConv2d(nn.Module):
         x_offset = self._reshape_x_offset(x_offset, ks)
         out = self.conv(x_offset)
         out = identity + out
-        del x_q_lt,x_q_lb,x_q_rb,x_q_rt
-        del x_offset, offset, identity, p
         return out
 
 
@@ -466,24 +450,8 @@ class GNT(nn.Module):
             nn.Linear(args.netwidth, args.netwidth),
         ).to(self.device)
         self.rgbfeat_fc = nn.DataParallel(self.rgbfeat_fc)
-        '''self.InvRes = Conv2d_BN(in_features=args.N_samples, out_features=args.N_samples).to(self.device)
-        self.InvRes = self.InvRes.to(self.device)
-        # 使用 DataParallel 包装模型
-        if torch.cuda.device_count() > 1:
-            print("Let's use", torch.cuda.device_count(), "GPUs!")
-            self.InvRes = nn.DataParallel(self.InvRes)'''
-        '''self.InvRes = ResBlock(in_features=args.N_samples, out_features=args.N_samples).to(self.device)
-        self.InvRes = self.InvRes.to(self.device)
-        # 使用 DataParallel 包装模型
-        if torch.cuda.device_count() > 1:
-            print("Let's use", torch.cuda.device_count(), "GPUs!")
-            self.InvRes = nn.DataParallel(self.InvRes)'''
         self.DeformConv = DeformConv2d(inc=N_samples, outc=N_samples).to(self.device)
         self.DeformConv = self.DeformConv.to(self.device)
-        # 使用 DataParallel 包装模型
-        if torch.cuda.device_count() > 1:
-            print("Let's use", torch.cuda.device_count(), "GPUs!")
-            #self.DeformConv = nn.DataParallel(self.DeformConv)
             
         self.p_fc= nn.Sequential(
             nn.Linear(args.netwidth*(args.trans_depth+1), args.netwidth),
@@ -582,8 +550,6 @@ class GNT(nn.Module):
         viewdirs_ = viewdirs[:, None].expand(pts_.shape)
         embed = torch.cat([pts_, viewdirs_], dim=-1)
         input_pts, input_views = torch.split(embed, [self.posenc_dim, self.viewenc_dim], dim=-1)
-
-        del viewdirs_, pts_, embed
                 
         outputs_list=[]
         h_list=[]
