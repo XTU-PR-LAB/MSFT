@@ -1,4 +1,4 @@
-# Is Attention All That NeRF Needs?
+Multi-Scale Feature-based Transformer for Generalizable Novel View Synthesis
 [Mukund Varma T](https://mukundvarmat.github.io/)<sup>1*</sup>,
 [Peihao Wang](https://peihaowang.github.io/)<sup>2*</sup>,
 [Xuxi Chen](https://xxchen.site/)<sup>2</sup>,
