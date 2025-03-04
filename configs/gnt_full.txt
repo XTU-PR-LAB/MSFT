@@ -14,7 +14,7 @@ eval_scenes = [trex, fern, flower, leaves, room, fortress, horns, orchids]
 # eval_scenes = [chair, drums, ficus, hotdog, materials, mic, ship, lego]
 
 ### TRAINING
-N_rand = 2048
+N_rand = 300
 lrate_feature = 0.001
 lrate_gnt = 0.0005
 lrate_decay_factor = 0.5
@@ -27,11 +27,11 @@ chunk_size = 2000
 
 ### RENDERING
 N_importance = 0
-N_samples = 64
+N_samples = 32
 inv_uniform = True
 white_bkgd = False
 
 ### CONSOLE AND TENSORBOARD
-i_img = 5000
+i_img = 25000
 i_print = 100
-i_weights = 5000
+i_weights = 25000
