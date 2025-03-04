@@ -44,7 +44,7 @@ def synchronize():
 
 
 def train(args):
-    args.expname = "gnt_blender"
+    #args.expname = "gnt_blender"
     device = "cuda:{}".format(args.local_rank)
     out_folder = os.path.join(args.rootdir, "out", args.expname)
     print("outputs will be saved to {}".format(out_folder))
