@@ -1,6 +1,6 @@
 ### INPUT
 expname = gnt_blender
-rootdir = /home/n417/sisi/GNT-main2/lego/200
+rootdir = /home/n417/sisi/GNT-main2/lego
 render_stride = 2
 distributed = False
 
@@ -11,7 +11,7 @@ eval_dataset = nerf_synthetic
 eval_scenes = lego
 
 ### TRAINING
-N_rand = 200
+N_rand = 300
 lrate_feature = 0.001
 lrate_gnt = 0.0005
 lrate_decay_factor = 0.5
@@ -28,6 +28,6 @@ inv_uniform = True
 white_bkgd = False
 
 ### CONSOLE AND TENSORBOARD
-i_img = 100
+i_img = 25000
 i_print = 100
-i_weights = 100
+i_weights = 25000
