@@ -1,4 +1,6 @@
 import os
+os.environ[ "CUDA_VISIBLE_DEVICES"] = "1"
+
 import json
 import numpy as np
 import shutil
@@ -18,7 +20,6 @@ from gnt.projection import Projector
 from gnt.data_loaders.create_training_dataset import create_training_dataset
 import imageio
 
-os.environ[ "CUDA_VISIBLE_DEVICES"] = "1"
 def worker_init_fn(worker_id):
     np.random.seed(np.random.get_state()[1][0] + worker_id)
 
