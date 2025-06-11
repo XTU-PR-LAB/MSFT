@@ -1,13 +1,13 @@
 import os
+os.environ[ "CUDA_VISIBLE_DEVICES"] = "1"
 import time
 import numpy as np
 import shutil
 import torch
 import torch.utils.data.distributed
 import torch.nn.functional as F
-from torch.cuda.amp import autocast
 
-from torch.utils.tensorboard import SummaryWriter
+#from torch.utils.tensorboard import SummaryWriter
 from torch.utils.data import DataLoader
 
 from gnt.data_loaders import dataset_dict
@@ -23,7 +23,7 @@ from gnt.projection import Projector
 from gnt.data_loaders.create_training_dataset import create_training_dataset
 import imageio
 
-os.environ[ "CUDA_VISIBLE_DEVICES"] = "0"
+
 def worker_init_fn(worker_id):
     np.random.seed(np.random.get_state()[1][0] + worker_id)
 
@@ -44,7 +44,7 @@ def synchronize():
 
 
 def train(args):
-    #args.expname = "gnt_blender"
+    args.expname = "gnt_full"
     device = "cuda:{}".format(args.local_rank)
     out_folder = os.path.join(args.rootdir, "out", args.expname)
     print("outputs will be saved to {}".format(out_folder))
@@ -160,7 +160,7 @@ def train(args):
             scalars_to_log["total_loss"] = total_loss.item()
             model.optimizer.step()
             model.scheduler.step()
-            torch.cuda.empty_cache()
+            
             scalars_to_log["lr"] = model.scheduler.get_last_lr()[0]
             # end of core optimization loop
             dt = time.time() - time0
