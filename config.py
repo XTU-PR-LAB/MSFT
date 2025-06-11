@@ -4,7 +4,7 @@ import configargparse
 def config_parser():
     parser = configargparse.ArgumentParser()
     # general
-    parser.add_argument("--config", is_config_file=True, help="config file path",default="configs/gnt_blender.txt")
+    parser.add_argument("--config", is_config_file=True, help="config file path",default="/home/ubuntu/n417/sisi/GNT-main2/configs/gnt_blender.txt")
     parser.add_argument(
         "--rootdir",
         type=str,
@@ -27,13 +27,13 @@ def config_parser():
         metavar="N",
         help="number of data loading workers (default: 8)",
     )
-    parser.add_argument("--n_scales", type=int, default=3)
-    parser.add_argument("--run_cnn", type=bool, default=True)
+    parser.add_argument("--n_scales", type=int, default=3) #层数
+    parser.add_argument("--run_cnn", type=bool, default=True) #是否使用可变形卷积网络
     parser.add_argument("--psnr_values", nargs="+", default=[])
     parser.add_argument(
         "--results_file",
         type=str,
-        default="llff_results.json",
+        default="123_results.json",
         help="Path to the results JSON file"
     )
     ########## dataset options ##########
